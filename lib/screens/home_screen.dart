@@ -159,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ) async {
     final authClient = FelicaRemoteClient(
       serverUrl: _settingsService.authServerUrl,
+      bearerToken: _settingsService.authToken,
     );
     try {
       authClient.setCurrentTag(tag);

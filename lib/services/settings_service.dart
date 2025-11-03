@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 class SettingsService {
   static const String _authServerUrlKey = 'auth_server_url';
   static const String _defaultAuthServerUrl = 'https://felica-auth.nyaa.ws';
+  static const String _authTokenKey = 'auth_token';
   
   late SharedPreferences _prefs;
   bool _initialized = false;
@@ -24,6 +25,20 @@ class SettingsService {
   Future<void> setAuthServerUrl(String url) async {
     _ensureInitialized();
     await _prefs.setString(_authServerUrlKey, url);
+  }
+
+  String? get authToken {
+    _ensureInitialized();
+    return _prefs.getString(_authTokenKey);
+  }
+
+  Future<void> setAuthToken(String? token) async {
+    _ensureInitialized();
+    if (token != null) {
+      await _prefs.setString(_authTokenKey, token);
+    } else {
+      await _prefs.remove(_authTokenKey);
+    }
   }
   
   Future<void> resetAuthServerUrl() async {

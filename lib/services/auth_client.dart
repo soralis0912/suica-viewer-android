@@ -21,6 +21,12 @@ class CommandEnvelope {
   CommandEnvelope({required this.frame, this.timeout});
 }
 
+String? _normalizeBearerToken(String? token) {
+  if (token == null) return null;
+  final stripped = token.trim();
+  return stripped.isEmpty ? null : stripped;
+}
+
 class FelicaRemoteClient {
   final String serverUrl;
   final http.Client _httpClient;
@@ -29,12 +35,15 @@ class FelicaRemoteClient {
   final double httpTimeout;
   final double defaultExchangeTimeout;
   NfcTag? _currentTag;
+  String? _bearerToken;
   
   FelicaRemoteClient({
     required this.serverUrl,
     this.httpTimeout = 10.0,
     this.defaultExchangeTimeout = 1.0,
-  }) : _httpClient = http.Client();
+    String? bearerToken,
+  }) : _httpClient = http.Client(),
+      _bearerToken = _normalizeBearerToken(bearerToken);
   
   void setCurrentTag(NfcTag tag) {
     _currentTag = tag;
@@ -42,6 +51,20 @@ class FelicaRemoteClient {
   
   void dispose() {
     _httpClient.close();
+  }
+
+  void setBearerToken(String? token) {
+    _bearerToken = _normalizeBearerToken(token);
+  }
+
+  Map<String, String> _buildHeaders() {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    if (_bearerToken != null) {
+      headers['Authorization'] = 'Bearer $_bearerToken';
+    }
+    return headers;
   }
   
   Future<Map<String, dynamic>> mutualAuthentication({
@@ -177,9 +200,7 @@ class FelicaRemoteClient {
     try {
       final response = await _httpClient.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: _buildHeaders(),
         body: jsonEncode(payload),
       ).timeout(Duration(seconds: httpTimeout.toInt()));
       

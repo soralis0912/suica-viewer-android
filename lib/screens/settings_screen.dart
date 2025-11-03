@@ -11,6 +11,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsService _settingsService = SettingsService();
   final TextEditingController _authServerController = TextEditingController();
+  final TextEditingController _authTokenController = TextEditingController();
   bool _isLoading = true;
   
   @override
@@ -22,6 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _authServerController.dispose();
+    _authTokenController.dispose();
     super.dispose();
   }
   
@@ -29,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await _settingsService.initialize();
       _authServerController.text = _settingsService.authServerUrl;
+      _authTokenController.text = _settingsService.authToken ?? '';
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -48,6 +51,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _saveSettings() async {
     try {
       await _settingsService.setAuthServerUrl(_authServerController.text.trim());
+      final token = _authTokenController.text.trim();
+      await _settingsService.setAuthToken(token.isNotEmpty ? token : null);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -154,6 +159,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             prefixIcon: Icon(Icons.link),
                           ),
                           keyboardType: TextInputType.url,
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _authTokenController,
+                          decoration: const InputDecoration(
+                            labelText: '認証トークン (任意)',
+                            hintText: 'Bearer トークンを入力',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.vpn_key),
+                          ),
+                          obscureText: true,
                         ),
                         const SizedBox(height: 16),
                         Row(
