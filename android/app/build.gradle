@@ -44,10 +44,36 @@ android {
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
+    signingConfigs {
+        // Local/dev keystore shipped in repository (android.jks)
+        android {
+            storeFile rootProject.file('android.jks')
+            storePassword 'android'
+            keyAlias 'android'
+            keyPassword 'android'
+        }
+
+        // Release keystore optionally provided as android/app/release.jks
+        // and credentials via environment variables (CI-friendly).
+        release {
+            storeFile file('release.jks')
+            storePassword System.getenv('STORE_PASSWORD')
+            keyAlias System.getenv('KEY_ALIAS')
+            keyPassword System.getenv('KEY_PASSWORD')
+        }
+    }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.android
+        }
         release {
-            signingConfig = signingConfigs.debug
+            // Prefer release keystore if present; otherwise fall back to android (dev) keystore
+            if (file('release.jks').exists()) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.android
+            }
         }
     }
 }
